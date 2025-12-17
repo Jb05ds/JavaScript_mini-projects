@@ -4,144 +4,247 @@
     <title>calculator final</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        body {
-            color: white;
-            background-color: black;
-        }
-        button {
-            border-radius: 100%;
-            border: none;
-            height: 60px;
-            width: 60px;
-            cursor: pointer;
-            font-size: 25px;
-            background-color: #333;
-            color: white;
-            margin-right: 7px;
-        }
-        .operators {
-            background-color: orange;
-        }
-        .operator {
-            font-size: 16px;
-        }
-        .js-calculation {
-            font-size: 45px;
-            font-weight: 500;
-            font-family: Roboto, Arial;
-            margin: 0px;
-            margin-top: 10px;
-        }
+    body {
+        background-color: skyblue;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .calculator {
+        display: grid;
+        grid-template-columns: 80px 80px 80px 80px;
+        column-gap: 10px;
+        background-color: white;
+        justify-content: center;
+        align-items: center;
+        width: 420px;
+        height: 600px;
+        border: solid 1px black;
+        border-radius: 20px;
+        position: relative;
+    }
+
+    .display {
+        grid-column: span 4;
+        width: 370px;
+        height: 100px;
+        margin: 5px;
+        margin-left: -15px;
+        background-color: lightblue;
+        border-radius: 20px;
+        padding-left: 15px;
+        padding-top: 15px;
+        font-size: 20px;
+        color: rgba(31, 29, 29, 0.719);
+    }
+
+    .answer {
+        position: absolute;
+        top: 5.5rem;
+        right: 4rem;
+        font-size: 30px;
+    }
+
+    button {
+        border: none;
+        border-radius: 100%;
+        height: 70px;
+        font-size: 18px;
+        margin: 0px;
+        background-color: rgb(209, 233, 241);
+    }
+    .operators {
+        background-color: rgb(129, 194, 216);
+    }
     </style>
   </head>
   <body>
-    <p class="js-calculation"></p>
+    <main class="calculator js-calculator">
+  <div class="display js-display"></div>
+  <div class="answer js-answer"></div>
 
-    <p>
-      <button onclick="
-        updateCalculation('1');
-      ">1</button>
+  <button data-value="(" class="operators">(</button>
+  <button data-value=")" class="operators">)</button>
+  <button data-value="%" class="operators">%</button>
+  <button data-action="clear" class="operators">AC</button>
 
-      <button onclick="
-        updateCalculation('2');
-      ">2</button>
+  <button data-value="7">7</button>
+  <button data-value="8">8</button>
+  <button data-value="9">9</button>
+  <button data-value="/" class="operators">÷</button>
 
-      <button onclick="
-        updateCalculation('3');
-      ">3</button>
+  <button data-value="4">4</button>
+  <button data-value="5">5</button>
+  <button data-value="6">6</button>
+  <button data-value="*" class="operators">x</button>
 
-      <button class="operators" onclick="
-        updateCalculation(' + ');
-      ">+</button>
-    </p>
+  <button data-value="1">1</button>
+  <button data-value="2">2</button>
+  <button data-value="3">3</button>
+  <button data-value="-" class="operators">-</button>
 
-    <p>
-      <button onclick="
-        updateCalculation('4');
-      ">4</button>
-
-      <button onclick="
-        updateCalculation('5');
-      ">5</button>
-
-      <button onclick="
-        updateCalculation('6');
-      ">6</button>
-
-      <button class="operators" onclick="
-        updateCalculation(' - ');
-      ">-</button>
-    </p>
-
-    <p>
-      <button onclick="
-        updateCalculation('7');
-      ">7</button>
-
-      <button onclick="
-        updateCalculation('8');
-      ">8</button>
-
-      <button onclick="
-        updateCalculation('9');
-      ">9</button>
-
-      <button class="operators" onclick="
-        updateCalculation(' * ');
-      ">*</button>
-    </p>
-
-    <p>
-      <button onclick="
-        updateCalculation('0');
-      ">0</button>
-
-      <button onclick="
-        updateCalculation('.');
-      ">.</button>
-
-      <button onclick="
-
-        calculation = eval(calculation);
-
-
-        displayCalculation();
-
-        localStorage.setItem('calculation', calculation);
-      ">=</button>
-
-      <button class="operators" onclick="
-        updateCalculation(' / ');
-      ">/</button>
-    </p>
-
-    <p>
-      <button class="operator" onclick="
-        calculation = '';
-
-        displayCalculation();
-
-        localStorage.setItem('calculation', calculation);
-      ">Clear</button>
-    </p>
+  <button data-value="." class="operators">.</button>
+  <button data-value="0">0</button>
+  <button data-action="equals" class="operators">=</button>
+  <button data-value="+" class="operators">+</button>
+</main>
 
     <script>
-      let calculation = localStorage.getItem('calculation') || '';
+      let calculation = "";
 
-      displayCalculation();
+let openBrackets = 0;
 
-      function updateCalculation(value) {
-        calculation += value;
+function updateDisplay(event) {
+        const button = event.target;
+        if (!button.matches("button")) return;
 
-        displayCalculation();
+        const value = button.dataset.value;
+        const action = button.dataset.action;
+        const lastChar = calculation[calculation.length - 1];
+        const operators = ["+", "-", "*", "/", "%"];
 
-        localStorage.setItem('calculation', calculation);
-      }
+        if(action === "clear") {
+            calculation = "";
+            openBrackets = 0;
+            document.querySelector(".js-display").innerHTML = calculation;
+            document.querySelector(".js-answer").innerHTML = calculation;
+            return;
+        }
 
-      function displayCalculation() {
-        document.querySelector('.js-calculation')
-          .innerHTML = calculation;
-      }
+        if(action === "equals") {
+            const tokens = tokenization(calculation);
+            const result = evaluator(tokens);
+            calculation = String(result);
+            document.querySelector(".js-answer").innerHTML = calculation;
+            return;
+        }
+
+
+        if (calculation === "" && operators.includes(value)) {
+            return;
+        }
+
+        if (operators.includes(lastChar) && operators.includes(value)) {
+            return;
+        }
+
+        if (lastChar === "." && value === ".") {
+            return;
+        }
+
+        if (value === "("){
+            openBrackets += 1;
+        }
+
+        if (value === ")"){
+            if (openBrackets <= 0){
+                return;
+            } else {
+            openBrackets -= 1;
+            }
+        }
+
+        if(value) {
+            calculation += value
+        }
+
+    document.querySelector(".js-display").innerHTML = calculation;
+    }
+
+function tokenization(calculation) {
+    const numbers = ["0","1","2","3","4","5","6","7","8","9", "."];
+    const operators = ["+", "-", "*", "/", "%"];
+    const brackets = ["(", ")"];
+
+    let currentNumber = "";
+    const tokens = [];
+
+        for (let i = 0; i < calculation.length; i++) {
+            const calcu = calculation[i]
+            if (numbers.includes(calcu)){
+                currentNumber += calcu
+            } else if (operators.includes(calcu)){
+                if (currentNumber){
+                    tokens.push(currentNumber)
+                    currentNumber = "";
+                    tokens.push(calcu)
+                } else {
+                    tokens.push(calcu)
+                }
+            } else if (brackets.includes(calcu)){
+                if (currentNumber) tokens.push(currentNumber);
+                currentNumber = "";
+                tokens.push(calcu);
+            }
+
+            
+        }
+        if (currentNumber){
+        tokens.push(currentNumber)
+        }
+        return tokens
+    }
+
+    function evaluator(tokens) {
+        const numbers = ["0","1","2","3","4","5","6","7","8","9","."]; 
+        const operators = ["+", "-", "*", "/", "%"];
+        const precedence = {
+            "+": 1,
+            "-": 1,
+            "*": 2,
+            "/": 2,
+            "%": 2,
+        }
+
+        let value = [];
+        let operator = [];
+
+    tokens.forEach((token) => {
+        if (!isNaN(token)){
+            value.push(Number(token))
+        } else if (token === "("){
+            operator.push(token)
+        } else if (token === ")"){
+            while (operator[operator.length - 1] !== (   "(")){
+                const op = operator.pop()
+                const right = value.pop()
+                const left = value.pop()
+                value.push(applyOperator(left, right, op))
+            }
+            operator.pop()
+
+        } else if (operators.includes(token)){
+            
+        while ( operator.length > 0 &&
+            operator[operator.length - 1] !== "(" &&
+            precedence[operator[operator.length - 1]] >= precedence[token]){
+
+            const top = operator.pop();
+            const right = value.pop();
+            const left = value.pop();
+            const result = applyOperator(left, right, top)
+            value.push(result);
+            }
+            operator.push(token);
+            }
+    })
+    while (operator.length > 0) {
+        const op = operator.pop();
+        const right = value.pop();
+        const left = value.pop();
+        value.push(applyOperator(left, right, op));
+    }
+    return value[0];
+}
+function applyOperator(left, right, op){
+    if (op === "+") return left + right
+    else if (op === "-") return left - right
+    else if (op === "*") return left * right
+    else if (op === "/") return left / right
+    else if (op === "%") return left % right
+}
+
+document.querySelector(".js-calculator").addEventListener('click', updateDisplay)
     </script>
   </body>
 </html>
